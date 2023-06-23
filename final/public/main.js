@@ -4,36 +4,29 @@ function createQuiz(response)
   {
         var data = JSON.parse(response);
 
-        var title = data.feed.entry[0]["gsx$title"]["$t"];
-        var day = data.feed.entry[0]["gsx$date"]["$t"];
+        var title = data.values[1][0];
+	var day = data.values[1][1];
 
-        var rules = new Array();
-        for(var i = 0; i < data.feed.entry.length; i++)
-        {
-          if(!(data.feed.entry[i]["gsx$rules"]["$t"]) == "")
-            rules.push(data.feed.entry[i]["gsx$rules"]["$t"]);
-        }
+	var rules = [];
+	for (var i = 1; i < data.values.length; i++) {
+	if (data.values[i][2] !== "") {
+	rules.push(data.values[i][2]);
+	}
+	}
 
+	var questions = [];
+	var questions_media = [];
+	var answers = [];
+	var answers_media = [];
+	var answers_descr = [];
 
-        var questions = new Array();
-        for(var i = 0; i < data.feed.entry.length; i++)
-          questions.push(data.feed.entry[i]["gsx$questions"]["$t"]);
-
-        var questions_media = new Array();
-        for(var i = 0; i < data.feed.entry.length; i++)
-          questions_media.push(data.feed.entry[i]["gsx$questionsmedia"]["$t"]);
-
-        var answers = new Array();
-        for(var i = 0; i < data.feed.entry.length; i++)
-          answers.push(data.feed.entry[i]["gsx$answers"]["$t"]);
-
-        var answers_media = new Array();
-        for(var i = 0; i < data.feed.entry.length; i++)
-          answers_media.push(data.feed.entry[i]["gsx$answersmedia"]["$t"]);
-
-        var answers_descr = new Array();
-        for(var i = 0; i < data.feed.entry.length; i++)
-          answers_descr.push(data.feed.entry[i]["gsx$answersdescription"]["$t"]);
+	for (var i = 1; i < data.values.length; i++) {
+	questions.push(data.values[i][3]);
+	questions_media.push(data.values[i][4]);
+	answers.push(data.values[i][5]);
+	answers_media.push(data.values[i][6]);
+	answers_descr.push(data.values[i][7]);
+	}
 
         showMeta(title, day, rules);
         populateTable(questions, questions_media, answers, answers_media, answers_descr);
@@ -298,7 +291,22 @@ function loadQuestion(object)
 
   function createSpreadsheetLink(docsLink){
     var spreadsheetKey = getKey(docsLink);
-    var spreadsheetLink = "https://spreadsheets.google.com/feeds/list/" + spreadsheetKey + "/od6/public/values?alt=json";
+    var spreadsheetLink = "https://sheets.googleapis.com/v4/spreadsheets/" + spreadsheetKey + "/values/A1:Z999";
+    // Make the API request
+	  fetch(spreadsheetLink, {
+	    headers: {
+	      'Authorization': 'Bearer ' + ""
+	    }
+	  })
+	    .then(response => response.json())
+	    .then(data => {
+	      // Process the retrieved spreadsheet data
+	      console.log(data);
+	    })
+	    .catch(error => {
+	      // Handle any errors
+	      console.error(error);
+	    });
     return spreadsheetLink
   }//Get JSON output link
 
@@ -321,6 +329,7 @@ function loadQuestion(object)
 
       var spreadsheetLink = createSpreadsheetLink(docsLink);
       xhr.open("GET", spreadsheetLink, true);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + "");
       xhr.send();
 
       var containerMiddle = document.getElementsByClassName("hide-init")[0];
